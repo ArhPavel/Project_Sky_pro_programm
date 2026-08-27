@@ -38,10 +38,50 @@ class Product:
         return f"{self.name}, {self.__price} руб. Остаток: {self.quantity} шт."
 
     def __add__(self, other: Any) -> float:
-        """Сложение двух продуктов: возвращает суммарную стоимость их остатков на складе"""
-        if type(other) is not Product and not isinstance(other, Product):
-            raise TypeError("Складывать можно только объекты класса Product")
+        """Сложение товаров только строго одинаковых классов продуктов"""
+        if type(self) is not type(other):
+            raise TypeError("Складывать можно только товары одного и того же класса")
         return (self.price * self.quantity) + (other.price * other.quantity)
+
+
+class Smartphone(Product):
+    """Класс смартфона, наследуется от Product"""
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        efficiency: float,
+        model: str,
+        memory: int,
+        color: str,
+    ) -> None:
+        super().__init__(name, description, price, quantity)
+        self.efficiency = efficiency
+        self.model = model
+        self.memory = memory
+        self.color = color
+
+
+class LawnGrass(Product):
+    """Класс газонной травы, наследуется от Product"""
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        country: str,
+        germination_period: int,
+        color: str,
+    ) -> None:
+        super().__init__(name, description, price, quantity)
+        self.country = country
+        self.germination_period = germination_period
+        self.color = color
 
 
 class Category:
@@ -68,8 +108,10 @@ class Category:
         """Геттер для приватного описания категории"""
         return self.__description
 
-    def add_product(self, product: Product) -> None:
-        """Добавляет продукт в приватный список и обновляет счетчик"""
+    def add_product(self, product: Any) -> None:
+        """Добавляет продукт или его наследника в приватный список и обновляет счетчик"""
+        if not isinstance(product, Product):
+            raise TypeError("Можно добавлять только объекты класса Product или его наследников")
         self.__products.append(product)
         Category.product_count += 1
 

@@ -2,7 +2,7 @@ from typing import Any
 
 import pytest
 
-from src.clases import Category, Product
+from src.clases import Category, LawnGrass, Product, Smartphone
 
 
 @pytest.fixture(autouse=True)
@@ -39,13 +39,11 @@ def test_product_price_setter_invalid(capsys: Any) -> None:
     """Тест сеттера цены при отрицательном или нулевом значении"""
     product = Product("Samsung", "256GB", 180000.0, 5)
 
-    # Проверяем нулевую цену
     product.price = 0
     assert product.price == 180000.0
     captured = capsys.readouterr()
     assert "Цена не должна быть нулевая или отрицательная" in captured.out
 
-    # Проверяем отрицательную цену
     product.price = -500
     assert product.price == 180000.0
     captured = capsys.readouterr()
@@ -61,6 +59,13 @@ def test_new_product_classmethod() -> None:
     assert product.name == "Xiaomi"
     assert product.price == 20000.0
     assert product.quantity == 15
+
+
+def test_category_creation_and_properties() -> None:
+    """Тест геттеров name и description категории"""
+    cat = Category("Смартфоны", "Мобильные устройства", [])
+    assert cat.name == "Смартфоны"
+    assert cat.description == "Мобильные устройства"
 
 
 def test_category_counts() -> None:
@@ -82,26 +87,12 @@ def test_category_counts() -> None:
 
 
 def test_category_str() -> None:
-    """Тест строкового отображения категории (__str__) с подсчетом общего остатка на складе"""
+    """Тест строкового отображения категории (__str__)"""
     p1 = Product("Samsung", "256GB", 180000.0, 5)
     p2 = Product("Iphone", "128GB", 100000.0, 10)
     cat = Category("Смартфоны", "Связь", [p1, p2])
 
-    # 5 + 10 = 15 шт.
     assert str(cat) == "Смартфоны, количество продуктов: 15 шт."
-
-
-def test_add_product_and_counter() -> None:
-    """Тест метода add_product и увеличения счетчика продуктов"""
-    p1 = Product("Iphone", "128GB", 100000.0, 10)
-    cat = Category("Смартфоны", "Связь", [p1])
-
-    assert Category.product_count == 1
-
-    p2 = Product("Xiaomi", "64GB", 20000.0, 5)
-    cat.add_product(p2)
-
-    assert Category.product_count == 2
 
 
 def test_products_getter_string_format() -> None:
@@ -111,21 +102,77 @@ def test_products_getter_string_format() -> None:
     cat = Category("Смартфоны", "Связь", [p1, p2])
 
     expected_output = "Samsung, 180000.0 руб. Остаток: 5 шт.\n" "Iphone, 100000.0 руб. Остаток: 10 шт.\n"
-
     assert cat.products == expected_output
 
 
-def test_product_add_success() -> None:
-    """Тест сложения двух продуктов: общая стоимость остатков"""
-    p1 = Product("Товар A", "Описание", 100.0, 10)  # 100 * 10 = 1000
-    p2 = Product("Товар B", "Описание", 200.0, 2)  # 200 * 2 = 400
+def test_smartphone_creation() -> None:
+    """Тест создания объекта Smartphone со всеми атрибутами"""
+    phone = Smartphone("iPhone 15", "Флагман", 120000.0, 3, 98.5, "15 Pro", 256, "Titanium")
 
+    assert phone.name == "iPhone 15"
+    assert phone.efficiency == 98.5
+    assert phone.model == "15 Pro"
+    assert phone.memory == 256
+    assert phone.color == "Titanium"
+
+
+def test_lawngrass_creation() -> None:
+    """Тест создания объекта LawnGrass со всеми атрибутами"""
+    grass = LawnGrass("Газон Премиум", "Универсальный", 500.0, 20, "Россия", 14, "Изумрудный")
+
+    assert grass.name == "Газон Премиум"
+    assert grass.country == "Россия"
+    assert grass.germination_period == 14
+    assert grass.color == "Изумрудный"
+
+
+def test_add_same_product_classes() -> None:
+    """Тест успешного сложения товаров одного и того же класса"""
+    p1 = Product("Товар 1", "Описание", 100.0, 10)  # 1000
+    p2 = Product("Товар 2", "Описание", 200.0, 2)  # 400
     assert p1 + p2 == 1400.0
 
+    phone1 = Smartphone("iPhone 14", "Описание", 80000.0, 2, 90.0, "14", 128, "Black")  # 160000
+    phone2 = Smartphone("iPhone 15", "Описание", 100000.0, 1, 95.0, "15", 256, "White")  # 100000
+    assert phone1 + phone2 == 260000.0
 
-def test_product_add_invalid_type() -> None:
-    """Тест вызова ошибки TypeError при сложении Product с другим типом"""
-    p1 = Product("Товар A", "Описание", 100.0, 10)
+
+def test_add_different_product_classes_raises_type_error() -> None:
+    """Тест запрета сложения объектов разных классов"""
+    product = Product("Товар", "Описание", 100.0, 10)
+    phone = Smartphone("iPhone", "Описание", 100000.0, 1, 95.0, "15", 256, "White")
+    grass = LawnGrass("Газон", "Описание", 500.0, 20, "Россия", 14, "Зеленый")
 
     with pytest.raises(TypeError):
-        _ = p1 + 500
+        _ = phone + grass
+
+    with pytest.raises(TypeError):
+        _ = phone + product
+
+    with pytest.raises(TypeError):
+        _ = product + 100
+
+
+def test_category_add_product_success() -> None:
+    """Тест добавления Product и его наследников в Category"""
+    cat = Category("Разное", "Описание", [])
+    product = Product("Товар", "Описание", 100.0, 5)
+    phone = Smartphone("iPhone", "Описание", 100000.0, 2, 95.0, "15", 256, "White")
+    grass = LawnGrass("Газон", "Описание", 500.0, 10, "Россия", 14, "Зеленый")
+
+    cat.add_product(product)
+    cat.add_product(phone)
+    cat.add_product(grass)
+
+    assert Category.product_count == 3
+
+
+def test_category_add_invalid_object_raises_type_error() -> None:
+    """Тест запрета добавления посторонних объектов в Category"""
+    cat = Category("Тест", "Описание", [])
+
+    with pytest.raises(TypeError):
+        cat.add_product("Не товар")
+
+    with pytest.raises(TypeError):
+        cat.add_product(12345)
