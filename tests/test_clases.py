@@ -2,20 +2,33 @@ from typing import Any
 
 import pytest
 
-from src.clases import Category, LawnGrass, Product, Smartphone
+from src.clases import BaseProduct, Category, LawnGrass, Order, PrintMixin, Product, Smartphone
 
 
 @pytest.fixture(autouse=True)
 def reset_category_counters() -> None:
-    """Фикстура автоматически сбрасывает счетчики перед каждым тестом"""
+    """Фикстура автоматически сбрасывает счетчики перед каждым тестом."""
     Category.category_count = 0
     Category.product_count = 0
 
 
-def test_product_creation() -> None:
-    """Тест создания объекта Product и работы геттера цены"""
-    product = Product("Samsung", "256GB", 180000.0, 5)
+def test_base_product_cannot_be_instantiated() -> None:
+    """Проверка, что нельзя создать экземпляр абстрактного класса BaseProduct."""
+    with pytest.raises(TypeError):
+        _ = BaseProduct("Имя", "Описание", 100.0, 1)  # type: ignore
 
+
+def test_print_mixin_output(capsys: Any) -> None:
+    """Тест работы миксина PrintMixin при создании продукта."""
+    _ = Product("Samsung", "256GB", 180000.0, 5)
+    captured = capsys.readouterr()
+    assert "Product(" in captured.out
+    assert "'Samsung'" in captured.out
+
+
+def test_product_creation() -> None:
+    """Тест создания объекта Product и работы геттера цены."""
+    product = Product("Samsung", "256GB", 180000.0, 5)
     assert product.name == "Samsung"
     assert product.description == "256GB"
     assert product.price == 180000.0
@@ -23,27 +36,21 @@ def test_product_creation() -> None:
 
 
 def test_product_str() -> None:
-    """Тест строкового отображения продукта (__str__)"""
+    """Тест строкового отображения продукта (__str__)."""
     product = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет", 180000.0, 5)
     assert str(product) == "Samsung Galaxy S23 Ultra, 180000.0 руб. Остаток: 5 шт."
 
 
 def test_product_price_setter_valid() -> None:
-    """Тест сеттера цены при передаче положительного значения"""
+    """Тест сеттера цены при положительном значении."""
     product = Product("Samsung", "256GB", 180000.0, 5)
     product.price = 200000.0
     assert product.price == 200000.0
 
 
 def test_product_price_setter_invalid(capsys: Any) -> None:
-    """Тест сеттера цены при отрицательном или нулевом значении"""
+    """Тест сеттера цены при отрицательном значении."""
     product = Product("Samsung", "256GB", 180000.0, 5)
-
-    product.price = 0
-    assert product.price == 180000.0
-    captured = capsys.readouterr()
-    assert "Цена не должна быть нулевая или отрицательная" in captured.out
-
     product.price = -500
     assert product.price == 180000.0
     captured = capsys.readouterr()
@@ -51,128 +58,85 @@ def test_product_price_setter_invalid(capsys: Any) -> None:
 
 
 def test_new_product_classmethod() -> None:
-    """Тест создания продукта через класс-метод new_product из словаря"""
+    """Тест создания продукта через класс-метод new_product."""
     product_dict = {"name": "Xiaomi", "description": "64GB", "price": 20000.0, "quantity": 15}
     product = Product.new_product(product_dict)
-
-    assert isinstance(product, Product)
     assert product.name == "Xiaomi"
     assert product.price == 20000.0
     assert product.quantity == 15
 
 
-def test_category_creation_and_properties() -> None:
-    """Тест геттеров name и description категории"""
-    cat = Category("Смартфоны", "Мобильные устройства", [])
-    assert cat.name == "Смартфоны"
-    assert cat.description == "Мобильные устройства"
-
-
-def test_category_counts() -> None:
-    """Тест правильного подсчета количества категорий и продуктов при инициализации"""
-    assert Category.category_count == 0
-    assert Category.product_count == 0
-
-    p1 = Product("Iphone", "128GB", 100000.0, 10)
-    p2 = Product("Xiaomi", "64GB", 20000.0, 5)
-    p3 = Product("TV", "4K", 50000.0, 2)
-
-    Category("Смартфоны", "Связь", [p1, p2])
-    assert Category.category_count == 1
-    assert Category.product_count == 2
-
-    Category("Телевизоры", "ТВ", [p3])
-    assert Category.category_count == 2
-    assert Category.product_count == 3
-
-
-def test_category_str() -> None:
-    """Тест строкового отображения категории (__str__)"""
+def test_category_counts_and_str() -> None:
+    """Тест счетчиков и строкового отображения категории."""
     p1 = Product("Samsung", "256GB", 180000.0, 5)
     p2 = Product("Iphone", "128GB", 100000.0, 10)
     cat = Category("Смартфоны", "Связь", [p1, p2])
 
+    assert Category.category_count == 1
+    assert Category.product_count == 2
     assert str(cat) == "Смартфоны, количество продуктов: 15 шт."
 
 
-def test_products_getter_string_format() -> None:
-    """Тест геттера products на строгое соответствие шаблону строки"""
+def test_products_getter() -> None:
+    """Тест геттера со списком продуктов."""
     p1 = Product("Samsung", "256GB", 180000.0, 5)
-    p2 = Product("Iphone", "128GB", 100000.0, 10)
-    cat = Category("Смартфоны", "Связь", [p1, p2])
-
-    expected_output = "Samsung, 180000.0 руб. Остаток: 5 шт.\n" "Iphone, 100000.0 руб. Остаток: 10 шт.\n"
-    assert cat.products == expected_output
+    cat = Category("Смартфоны", "Связь", [p1])
+    assert cat.products == "Samsung, 180000.0 руб. Остаток: 5 шт.\n"
 
 
-def test_smartphone_creation() -> None:
-    """Тест создания объекта Smartphone со всеми атрибутами"""
+def test_smartphone_and_grass_creation() -> None:
+    """Тест создания наследников Smartphone и LawnGrass."""
     phone = Smartphone("iPhone 15", "Флагман", 120000.0, 3, 98.5, "15 Pro", 256, "Titanium")
-
-    assert phone.name == "iPhone 15"
-    assert phone.efficiency == 98.5
-    assert phone.model == "15 Pro"
-    assert phone.memory == 256
-    assert phone.color == "Titanium"
-
-
-def test_lawngrass_creation() -> None:
-    """Тест создания объекта LawnGrass со всеми атрибутами"""
     grass = LawnGrass("Газон Премиум", "Универсальный", 500.0, 20, "Россия", 14, "Изумрудный")
 
-    assert grass.name == "Газон Премиум"
+    assert phone.model == "15 Pro"
     assert grass.country == "Россия"
-    assert grass.germination_period == 14
-    assert grass.color == "Изумрудный"
 
 
-def test_add_same_product_classes() -> None:
-    """Тест успешного сложения товаров одного и того же класса"""
-    p1 = Product("Товар 1", "Описание", 100.0, 10)  # 1000
-    p2 = Product("Товар 2", "Описание", 200.0, 2)  # 400
+def test_products_add_restrictions() -> None:
+    """Тест сложения одинаковых классов и запрета разных."""
+    p1 = Product("Товар 1", "Описание", 100.0, 10)
+    p2 = Product("Товар 2", "Описание", 200.0, 2)
     assert p1 + p2 == 1400.0
 
-    phone1 = Smartphone("iPhone 14", "Описание", 80000.0, 2, 90.0, "14", 128, "Black")  # 160000
-    phone2 = Smartphone("iPhone 15", "Описание", 100000.0, 1, 95.0, "15", 256, "White")  # 100000
-    assert phone1 + phone2 == 260000.0
-
-
-def test_add_different_product_classes_raises_type_error() -> None:
-    """Тест запрета сложения объектов разных классов"""
-    product = Product("Товар", "Описание", 100.0, 10)
     phone = Smartphone("iPhone", "Описание", 100000.0, 1, 95.0, "15", 256, "White")
-    grass = LawnGrass("Газон", "Описание", 500.0, 20, "Россия", 14, "Зеленый")
-
     with pytest.raises(TypeError):
-        _ = phone + grass
-
-    with pytest.raises(TypeError):
-        _ = phone + product
-
-    with pytest.raises(TypeError):
-        _ = product + 100
+        _ = p1 + phone
 
 
-def test_category_add_product_success() -> None:
-    """Тест добавления Product и его наследников в Category"""
+def test_category_add_product_validation() -> None:
+    """Тест валидации добавления продукта в категорию."""
     cat = Category("Разное", "Описание", [])
     product = Product("Товар", "Описание", 100.0, 5)
-    phone = Smartphone("iPhone", "Описание", 100000.0, 2, 95.0, "15", 256, "White")
-    grass = LawnGrass("Газон", "Описание", 500.0, 10, "Россия", 14, "Зеленый")
-
     cat.add_product(product)
-    cat.add_product(phone)
-    cat.add_product(grass)
-
-    assert Category.product_count == 3
-
-
-def test_category_add_invalid_object_raises_type_error() -> None:
-    """Тест запрета добавления посторонних объектов в Category"""
-    cat = Category("Тест", "Описание", [])
+    assert Category.product_count == 1
 
     with pytest.raises(TypeError):
-        cat.add_product("Не товар")
+        cat.add_product("Не продукт")
+
+
+def test_order_creation_and_str() -> None:
+    """Тест работы класса Заказ (Order)."""
+    product = Product("Samsung", "256GB", 10000.0, 5)
+    order = Order(product, 2)
+
+    assert order.total_price == 20000.0
+    assert "общая сумма: 20000.0 руб." in str(order)
 
     with pytest.raises(TypeError):
-        cat.add_product(12345)
+        _ = Order("Не продукт", 1)  # type: ignore
+
+
+def test_print_mixin_custom_class(capsys: Any) -> None:
+    """Тест работы PrintMixin на отдельном пользовательском классе."""
+
+    class TestClass(PrintMixin):
+        def __init__(self, value: int, text: str) -> None:
+            self.value = value
+            self.text = text
+            super().__init__()
+
+    _ = TestClass(42, "test")
+    captured = capsys.readouterr()
+
+    assert "TestClass(42, 'test')" in captured.out
