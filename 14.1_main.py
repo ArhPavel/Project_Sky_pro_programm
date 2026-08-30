@@ -1,44 +1,48 @@
-from src.clases import Category, Product
+from src.clases import Category, LawnGrass, Product, Smartphone
 
 if __name__ == "__main__":
-    product1 = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5)
+    # 1. Создание обычных продуктов
+    product1 = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет", 180000.0, 5)
     product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
     product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
 
-    print(product1.name)
-    print(product1.description)
-    print(product1.price)
-    print(product1.quantity)
+    # 2. Создание объектов классов-наследников (Smartphone и LawnGrass)
+    smartphone1 = Smartphone("iPhone 15 Pro", "512GB, Titanium", 150000.0, 3, 98.2, "15 Pro", 512, "Titanium")
+    smartphone2 = Smartphone("Samsung S24", "256GB, Black", 110000.0, 5, 95.0, "S24", 256, "Black")
 
-    print(product2.name)
-    print(product2.description)
-    print(product2.price)
-    print(product2.quantity)
+    grass1 = LawnGrass("Газон Премиум", "Универсальный", 500.0, 20, "Россия", 14, "Изумрудный")
+    grass2 = LawnGrass("Газон Люкс", "Спортивный", 700.0, 10, "Германия", 10, "Темно-зеленый")
 
-    print(product3.name)
-    print(product3.description)
-    print(product3.price)
-    print(product3.quantity)
+    # 3. Проверка строкового отображения (__str__)
+    print("--- Строковое отображение товаров ---")
+    print(str(product1))
+    print(str(smartphone1))
+    print(str(grass1))
 
-    category1 = Category("Смартфоны",
-                         "Смартфоны, как средство не только коммуникации, но и получения дополнительных функций для удобства жизни",
-                         [product1, product2, product3])
+    # 4. Проверка сложения товаров одного класса (__add__)
+    print("\n--- Сложение товаров одного типа ---")
+    print(f"Сумма стоимости остатков смартфонов: {smartphone1 + smartphone2} руб.")
+    print(f"Сумма стоимости остатков газонной травы: {grass1 + grass2} руб.")
 
-    print(category1.name == "Смартфоны")
-    print(category1.description)
-    print(len(category1.products))
-    print(category1.category_count)
-    print(category1.product_count)
+    # 5. Проверка запрета сложения товаров разных классов
+    print("\n--- Проверка ограничений сложения ---")
+    try:
+        _ = smartphone1 + grass1
+    except TypeError as e:
+        print(f"Успешно перехвачена ошибка при сложении смартфона и травы: {e}")
 
-    product4 = Product("55\" QLED 4K", "Фоновая подсветка", 123000.0, 7)
-    category2 = Category("Телевизоры",
-                         "Современный телевизор, который позволяет наслаждаться просмотром, станет вашим другом и помощником",
-                         [product4])
+    # 6. Создание категории и добавление продуктов
+    category = Category("Смартфоны", "Современные мобильные телефоны", [smartphone1])
+    print(f"\nКатегория до добавления: {category}")
 
-    print(category2.name)
-    print(category2.description)
-    print(len(category2.products))
-    print(category2.products)
+    category.add_product(smartphone2)
+    print(f"Категория после добавления смартфона: {category}")
+    print("\nСписок товаров в категории:")
+    print(category.products)
 
-    print(Category.category_count)
-    print(Category.product_count)
+    # 7. Проверка запрета добавления некорректного объекта в категорию
+    print("--- Проверка валидации добавления в категорию ---")
+    try:
+        category.add_product("Не продукт")
+    except TypeError as e:
+        print(f"Успешно перехвачена ошибка добавления постороннего объекта: {e}")
