@@ -46,3 +46,4 @@ if __name__ == "__main__":
         category.add_product("Не продукт")
     except TypeError as e:
         print(f"Успешно перехвачена ошибка добавления постороннего объекта: {e}")
+        
