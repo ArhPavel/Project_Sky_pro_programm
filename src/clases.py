@@ -51,6 +51,8 @@ class Product(PrintMixin, BaseProduct):
     """Класс продукта: имя, описание, цена и количество."""
 
     def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
+        if quantity == 0:
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
         super().__init__(name=name, description=description, price=price, quantity=quantity)
 
     @property
@@ -149,6 +151,16 @@ class Category(BaseOrderCategory):
 
         Category.category_count += 1
         Category.product_count += len(self.__products)
+
+    def middle_price(self) -> float:
+        """Подсчитывает средний ценник всех товаров в категории.
+
+        При делении на ноль (нет товаров) возвращает 0.
+        """
+        try:
+            return round(sum(p.price for p in self.__products) / len(self.__products), 2)
+        except ZeroDivisionError:
+            return 0.0
 
     @property
     def name(self) -> str:

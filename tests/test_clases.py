@@ -140,3 +140,25 @@ def test_print_mixin_custom_class(capsys: Any) -> None:
     captured = capsys.readouterr()
 
     assert "TestClass(42, 'test')" in captured.out
+
+
+def test_product_init_zero_quantity_raises_value_error() -> None:
+    """Проверка вызова ValueError при создании товара с нулевым количеством."""
+    with pytest.raises(ValueError, match="Товар с нулевым количеством не может быть добавлен"):
+        Product("Бракованный товар", "Описание", 100.0, 0)
+
+
+def test_category_middle_price_with_products() -> None:
+    """Тест расчета средней цены товаров в категории."""
+    p1 = Product("Товар 1", "Описание", 100.0, 10)
+    p2 = Product("Товар 2", "Описание", 200.0, 5)
+    category = Category("Категория", "Описание", [p1, p2])
+
+    assert category.middle_price() == 150.0
+
+
+def test_category_middle_price_empty_category() -> None:
+    """Тест обработки исключения ZeroDivisionError при пустой категории."""
+    category = Category("Пустая", "Описание", [])
+
+    assert category.middle_price() == 0.0

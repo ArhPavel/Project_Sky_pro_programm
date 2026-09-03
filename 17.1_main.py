@@ -1,29 +1,21 @@
-from src.clases import Category, LawnGrass, Order, Product, Smartphone
+from src.clases import Category, Product
 
-if __name__ == "__main__":
-    print("--- 1. Создание объектов (проверка работы PrintMixin) ---")
-    product = Product("Samsung Galaxy S23 Ultra", "256GB, Серый", 180000.0, 5)
-    phone = Smartphone("iPhone 15 Pro", "512GB", 150000.0, 3, 98.2, "15 Pro", 512, "Titanium")
-    grass = LawnGrass("Газон Премиум", "Универсальный", 500.0, 20, "Россия", 14, "Зеленый")
-
-    print("\n--- 2. Проверка работы строкового отображения ---")
-    print(product)
-    print(phone)
-    print(grass)
-
-    print("\n--- 3. Проверка сложения ---")
-    product2 = Product("Xiaomi Redmi Note 11", "1024GB", 31000.0, 14)
-    print(f"Сумма запасов Product: {product + product2} руб.")
-
+if __name__ == '__main__':
     try:
-        _ = phone + grass
-    except TypeError as e:
-        print(f"Ограничение сложения сработало: {e}")
+        product_invalid = Product("Бракованный товар", "Неверное количество", 1000.0, 0)
+    except ValueError as e:
+        print(
+            "Возникла ошибка ValueError прерывающая работу программы при попытке добавить продукт с нулевым количеством")
+    else:
+        print("Не возникла ошибка ValueError при попытке добавить продукт с нулевым количеством")
 
-    print("\n--- 4. Проверка категории и добавления продуктов ---")
-    category = Category("Смартфоны", "Категория смартфонов", [phone])
-    print(category)
+    product1 = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5)
+    product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
+    product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
 
-    print("\n--- 5. Проверка оформления Заказа (Order) ---")
-    order = Order(product, 3)
-    print(order)
+    category1 = Category("Смартфоны", "Категория смартфонов", [product1, product2, product3])
+
+    print(category1.middle_price())
+
+    category_empty = Category("Пустая категория", "Категория без продуктов", [])
+    print(category_empty.middle_price())
